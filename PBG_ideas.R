@@ -1,6 +1,7 @@
-# Why - develop a shiny app (for the experience)
-# why - provide a basic, functional process behavior chart too
-# why - teach basics of process behavior charts
+
+# why - provide a basic, functional process behavior graoh
+# doing for the experience, also to share my unique perspective
+# why - teach basics of process behavior graphs
 
 # packages ----
 library(ggplot2)
