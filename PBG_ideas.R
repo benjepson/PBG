@@ -1,5 +1,5 @@
 
-# why - provide a basic, functional process behavior graoh
+# why - provide a basic, functional process behavior graph
 # doing for the experience, also to share my unique perspective
 # why - teach basics of process behavior graphs
 
@@ -66,14 +66,14 @@ if (is.numeric(y_vals) == TRUE) {
 
 dat <- data.frame(y_vals, 
                   index_col = 1:length(y_vals), 
-                  mR_vals = c(NA, abs(diff(y_vals))))
+                  mR_vals = c(0, abs(diff(y_vals))))
 # ok seems to work
 
 rm(y_vals)
 
 PBG_vals <- get_PBG_values(dat$y_vals)
 
-# 2 - graph options inputs ----
+# 2 SIDEBAR - graph options inputs ----
 
 # y axis label
 # x axis label
@@ -88,46 +88,63 @@ PBG_vals <- get_PBG_values(dat$y_vals)
 # mid box alpha
 # switch between static and interactive (?)
 # OR MAYBE just abandon ggplot and do it directly in a better interactive package
-# plotly doesn't do what I want
-# add moving range plot
+# add moving range plot or just y_graph
+# option to adjust ratio of y_graph and mR graph heights to each other
+# add sideways histogram to layout next to main graph
 
 
-# The main graph ----
+# 3 - The main graph ----
+# a section that shows the graph
 
 # turn this into an easy function the user can give arguments for:
 
 y_graph <- ggplot(data = dat, 
        aes(x = index_col, y = y_vals)) + 
+    #mid box
+    annotate('rect', 
+             xmin = 1, 
+             xmax = max(dat$index_col)+0.5, 
+             ymin = PBG_vals$mid_LL, 
+             ymax = PBG_vals$mid_UL, 
+             alpha = 0.1, 
+             fill = "green")+
         geom_point() + 
         geom_line() + 
-    #mid box
-        annotate('rect', 
-              xmin = 0, 
-              xmax = max(dat$index_col)+1, 
-              ymin = PBG_vals$mid_LL, 
-              ymax = PBG_vals$mid_UL, 
-              alpha = 0.1, 
-              fill = "green")+
+    
     # upper, lower limits, and average
-        geom_hline(yintercept = PBG_vals$UL, color = "red", size = 1) + #UL
-        annotate(geom = "label", x = max(dat$index_col)+0.5, y = PBG_vals$UL, color = "red", label = "UL")+
-        geom_hline(yintercept = PBG_vals$LL, color = "red", size = 1) + #LL
-        annotate(geom = "label", x = max(dat$index_col)+0.5, y = PBG_vals$LL, color = "red", label = "LL")+
-        geom_hline(yintercept = PBG_vals$y_vals_avg, color = "blue", size = 1) + #average
+        geom_hline(yintercept = PBG_vals$UL, color = "purple", linewidth = 1) + #UL
+        annotate(geom = "label", x = max(dat$index_col)+0.5, y = PBG_vals$UL, color = "purple", label = "UL")+
+        geom_hline(yintercept = PBG_vals$LL, color = "purple", linewidth = 1) + #LL
+        annotate(geom = "label", x = max(dat$index_col)+0.5, y = PBG_vals$LL, color = "purple", label = "LL")+
+        geom_hline(yintercept = PBG_vals$y_vals_avg, color = "blue", linewidth = 1) + #average
         annotate(geom = "label", x = max(dat$index_col)+0.5, y = PBG_vals$y_vals_avg, color = "blue", label = "avg")+
     #integer breaks on x axis
-        scale_x_continuous(breaks = scales::pretty_breaks(), 
-                           limits = range(dat$index_col)+0.5)+
+    #needed to specify so mR and main graph line up!
+        scale_x_continuous(breaks = scales::breaks_pretty(), 
+                           limits = c(1, max(dat$index_col)+0.5))+
         xlab(label = "")
 
 
+y_graph
 
-#logic select if static or interactive
+#logic select if static or interactive? Or just do interactive?
+
 #plotly kinda isn't working great. we'll try a different one when the elements are in place
-y_graph      
+# I mean it's fine but labels don't work. I don't love ggplotly
+plotly::ggplotly(y_graph)      
 
+# 3a ----
+# sideways histogram next to main graph
 
-#mR_graph
+n_bins <- if (sqrt(length(dat$y_vals))< 5) 5 else sqrt(length(dat$y_vals))
+
+main_histogram <- ggplot(data = dat, 
+                         aes(y = y_vals))+
+                        geom_histogram(bins = n_bins, color = "white", fill = "light blue")+
+                        theme_void()
+
+# 4 - mR_graph ----
+# another box displaying this graph
 
 mR_graph <- ggplot(data = dat, 
        aes(x = index_col, y = mR_vals)) + 
@@ -135,13 +152,19 @@ mR_graph <- ggplot(data = dat,
     geom_point() + 
     geom_line()+
     
-    geom_hline(yintercept = PBG_vals$mR_UL, color = "red", size = 1) + #UL
+    geom_hline(yintercept = PBG_vals$mR_UL, color = "purple", size = 1) + #UL
+    annotate(geom = "label", x = max(dat$index_col)+0.5, y = PBG_vals$mR_avg, color = "purple", label = "avg")
     geom_hline(yintercept = PBG_vals$mR_avg, color = "blue", size = 1)+ #average
     annotate(geom = "label", x = max(dat$index_col)+0.5, y = PBG_vals$mR_avg, color = "blue", label = "avg")+
     #need to always include zero in mR graph
     scale_y_continuous(limits = c(0, NA))+
     scale_x_continuous(breaks = scales::pretty_breaks(), 
-                       limits = range(dat$index_col)+0.5)+
+                       limits = c(1, max(dat$index_col)+0.5))+
     xlab(label = "")
 
+
+# The idea of how the main plus mR graphs will look
 y_graph / mR_graph + plot_layout(heights = c(2,1))
+    
+# 5 side box explaining----
+# text box with small reminder, run rules, graph interpretation
